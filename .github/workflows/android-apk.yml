@@ -49,8 +49,11 @@ jobs:
       - name: Android SDK bileşenlerini yukle
         shell: bash
         run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager --install 'platform-tools' 'platforms;android-35' 'platforms;android-36' 'build-tools;35.0.0' 'build-tools;36.0.0'
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print -quit)
+          test -n "$SDKMANAGER" || { echo "Android sdkmanager bulunamadi: $ANDROID_HOME"; exit 1; }
+          echo "SDK manager: $SDKMANAGER"
+          yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --install 'platform-tools' 'platforms;android-35' 'platforms;android-36' 'build-tools;35.0.0' 'build-tools;36.0.0'
           test -x "$ANDROID_HOME/platform-tools/adb"
 
       - name: Python 3.12 kur
