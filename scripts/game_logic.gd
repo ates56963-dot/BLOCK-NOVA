@@ -151,7 +151,7 @@ func _configure_level() -> void:
 
 func _daily_initial() -> void:
     for i in range(3):
-        var p := (abs(seed_value) + i * 13) % 64
+        var p: int = (absi(seed_value) + i * 13) % 64
         board[p] = i + 2
 
 func can_place(shape_id: int, x: int, y: int) -> bool:
