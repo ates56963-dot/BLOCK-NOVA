@@ -1,0 +1,33 @@
+BLOCK NOVA - Test Raporu
+Sürüm: 0.1.0 kaynak / geliştirme
+Tarih: 2026-11-10
+
+DURUM ÖZETİ
+- Kaynak dosyalar oluşturuldu: EVET
+- Özgün OGG dosyaları oluşturuldu: EVET (5 müzik + 12 SFX)
+- 8 özgün arka plan görseli oluşturuldu: EVET
+- Python referans testleri: 12/12 BAŞARILI
+- Referans model üzerinde rastgele yerleştirme durumları: 10.000 SENARYO BAŞARILI
+- Godot script parse/çalıştırma: GERÇEKLEŞTİRİLEMEDİ (Godot kurulu değil)
+- Godot başsız birim testleri: HAZIR, ÇALIŞTIRILMADI
+- Android APK derleme: GERÇEKLEŞTİRİLEMEDİ
+- Android cihaz / emülatör açılış testi: GERÇEKLEŞTİRİLEMEDİ
+- 60 FPS, dokunmatik ve cihaz dayanıklılık testi: GERÇEKLEŞTİRİLEMEDİ
+- 100 macera seviyesinin çözülebilirlik testi: GERÇEKLEŞTİRİLEMEDİ
+- Veri kaybı ve arka plandan dönme cihaz testi: GERÇEKLEŞTİRİLEMEDİ
+- APK boyut ölçümü: YOK (APK yok)
+
+TEST KAPSAMI - PYTHON BAĞIMSIZ REFERANS
+- Kaynaktan 30 şekil okunması
+- Hücrelerin benzersizliği, şekil bağlantılılığı, 8x8 sınırları
+- Dolu kareye yerleşim reddi, dışarı taşma
+- Aynı hamlede satır+sütun temizleme, kesişimin bir kere silinmesi
+- Geçersiz hamlenin tahtayı değiştirmemesi
+- 10.000 rastgele tahta/yerleşim durumu
+- Ses varlıklarının varlığı
+- Android export preset yapılandırması (min26, target36, ARM64)
+
+ÖNEMLİ NOT
+Python testleri gerçek Godot kodunu çalıştırmaz; referans algoritma üzerinden kaynak
+şekil tanımlarını kontrol eder. Bu nedenle Android çalışabilirliği konusunda güvence vermez.
+Önce Android/Godot ortamında derleme ve GDScript testleri yapılmalıdır.

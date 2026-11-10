@@ -1,0 +1,19 @@
+BLOCK NOVA - Blok Evreni
+Sürüm: 0.1.0 (kaynak proje / gelişim sürümü)
+Tarih: 2026-11-10
+
+SUNULAN:
+- Godot 4.x proje kaynağı
+- 8x8 yerleştirme çekirdeği, satır/sütun temizleme
+- 30 tanımlı parça şekli, üçlü parça üretimi
+- Klasik, Zen, Zaman Yarışı, Günlük ve 100 bölüm tanımıyla Macera
+- 8 görsel palet/tema, basit parıltı efektleri, puanlama ve kombolar
+- 5 özgün müzik döngüsü + 12 özgün kısa SFX
+- Türkçe arayüz, yerel kayıt ve istatistik taslağı
+- Android export preset API36, ARM64, minAPI26
+
+TESLİMAT SINIRLARI:
+- BLOCK_NOVA_Final.apk yok: Android SDK, Godot çalıştırıcısı ve emülatör erişimi yoktu.
+- Android'de açılış, cihaz performansı ve Play Store uygunluk testleri yapılamadı.
+- Bu sürüm tamamlanmış 100 MB premium oyun olarak tanıtılmamalıdır.
+- Proje kaynaklarının Godot içinde açılması ve çalıştırılarak hataların giderilmesi gereklidir.

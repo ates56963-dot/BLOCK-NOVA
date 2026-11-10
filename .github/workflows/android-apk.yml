@@ -1,0 +1,151 @@
+name: BLOCK NOVA - APK Olustur
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+
+permissions:
+  contents: read
+
+jobs:
+  android-apk:
+    name: Godot test ve Android APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - name: Kaynak dosyalari al
+        uses: actions/checkout@v4
+
+      - name: ZIP olarak yuklenen projeyi ac (varsa)
+        shell: bash
+        run: |
+          if [ ! -f project.godot ]; then
+            test -f BLOCK_NOVA_Source.zip || { echo 'project.godot veya BLOCK_NOVA_Source.zip bulunamadi.'; exit 1; }
+            unzip -q BLOCK_NOVA_Source.zip -d .
+          fi
+          if [ ! -f project.godot ] && [ -f BLOCK_NOVA_Source/project.godot ]; then
+            cp -a BLOCK_NOVA_Source/. .
+          fi
+          test -f project.godot
+          test -f export_presets.cfg
+          test -f tests/test_logic.gd
+          mkdir -p build
+
+      - name: Java 17 kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Android SDK kur
+        uses: android-actions/setup-android@v3
+
+      - name: Android SDK bileşenlerini yukle
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager --install 'platform-tools' 'platforms;android-35' 'platforms;android-36' 'build-tools;35.0.0' 'build-tools;36.0.0'
+          test -x "$ANDROID_HOME/platform-tools/adb"
+
+      - name: Ozgun oyun gorsellerini ve seslerini olustur
+        shell: bash
+        run: |
+          python3 -m pip install --user --disable-pip-version-check numpy pillow
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          mkdir -p assets/themes assets/audio/music assets/audio/sfx
+          python3 tools/generate_icons.py
+          python3 tools/generate_themes.py
+          python3 tools/generate_audio.py
+          test -s assets/icon.png
+          test -s assets/audio/music/menu.ogg
+          test -s assets/themes/theme_7.webp
+
+      - name: Godot ve uyumlu Android export templates kur
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.5.1
+          use-dotnet: false
+          include-templates: true
+
+      - name: Android debug anahtari olustur
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.android"
+          keytool -genkeypair -noprompt -keystore "$HOME/.android/block_nova_debug.keystore" \
+            -storepass android -alias androiddebugkey -keypass android \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname 'CN=Android Debug,O=Block Nova,C=TR'
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_PATH=$HOME/.android/block_nova_debug.keystore" >> "$GITHUB_ENV"
+          echo 'GODOT_ANDROID_KEYSTORE_DEBUG_USER=androiddebugkey' >> "$GITHUB_ENV"
+          echo 'GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android' >> "$GITHUB_ENV"
+
+      - name: Godot SDK ayarlari
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.config/godot"
+          python3 - <<'PYSETTINGS'
+          import json, os, pathlib
+          f = pathlib.Path.home()/'.config/godot/editor_settings-4.5.tres'
+          sdk = os.environ.get('ANDROID_HOME') or os.environ.get('ANDROID_SDK_ROOT')
+          java = os.environ.get('JAVA_HOME')
+          if not sdk or not java:
+              raise RuntimeError('ANDROID_HOME ya da JAVA_HOME tanimli degil')
+          f.write_text('[gd_resource type="EditorSettings" format=3]\n\n[resource]\n'
+                       + 'export/android/android_sdk_path = ' + json.dumps(sdk) + '\n'
+                       + 'export/android/java_sdk_path = ' + json.dumps(java) + '\n',encoding='utf-8')
+          print('Editor settings olusturuldu:',f)
+          PYSETTINGS
+
+      - name: Godot dosyalarini import et ve parse et
+        shell: bash
+        run: |
+          godot --headless --path . --editor --quit 2>&1 | tee build/import.log
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|Parser Error:' build/import.log; then
+            echo 'Godot kaynak kodu ayrıştırma hatası; APK derlenmeyecek.'
+            exit 1
+          fi
+
+      - name: Oyun mantigi Godot testleri
+        shell: bash
+        run: |
+          godot --headless --path . --script res://tests/test_logic.gd 2>&1 | tee build/tests.log
+          grep -q 'GODOT LOGIC TESTS PASSED' build/tests.log
+
+      - name: Android APK derle
+        shell: bash
+        run: |
+          godot --headless --path . --export-debug 'Android' build/BLOCK_NOVA_Debug.apk 2>&1 | tee build/export.log
+          test -s build/BLOCK_NOVA_Debug.apk
+          size=$(stat -c %s build/BLOCK_NOVA_Debug.apk)
+          echo "APK size: $size bytes"
+          if [ "$size" -gt 100000000 ]; then
+            echo 'APK 100 MB ust sinirini asti.'; exit 1
+          fi
+          sha256sum build/BLOCK_NOVA_Debug.apk | tee build/SHA256SUMS.txt
+          unzip -t build/BLOCK_NOVA_Debug.apk | tail -2
+
+      - name: APK ve raporu indirilebilir yap
+        uses: actions/upload-artifact@v4
+        with:
+          name: BLOCK_NOVA_Android_APK
+          path: |
+            build/BLOCK_NOVA_Debug.apk
+            build/SHA256SUMS.txt
+            build/tests.log
+            build/import.log
+            build/export.log
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Hata olursa loglari sakla
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: BLOCK_NOVA_Hata_Kayitlari
+          path: build/*.log
+          if-no-files-found: ignore
+          retention-days: 7
