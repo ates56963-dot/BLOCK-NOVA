@@ -153,7 +153,7 @@ func _background(w: float,h: float) -> void:
         var sx := p.x*w+sin(animation_clock*0.1+i)*4.0
         var sy := p.y*h
         draw_circle(Vector2(sx,sy),p.z,Color(0.7,0.88,1.0,0.23+0.17*sin(animation_clock+i)))
-    var ambient := ACCENT_COLORS[theme_idx]
+    var ambient: Color = ACCENT_COLORS[theme_idx]
     for k in range(6,0,-1):
         draw_circle(Vector2(w*0.5,h*0.05),float(k)*w*0.18,Color(ambient.r,ambient.g,ambient.b,0.008))
 
@@ -264,7 +264,7 @@ func _game(w: float,h: float) -> void:
         var piece: Dictionary=logic.tray[dragging]
         var color: Color=Color("4ae7b3") if valid else Color("fa657c")
         for v in logic.shape_cells(int(piece["shape"])):
-            var point:=preview+v
+            var point: Vector2i = preview+v
             if point.x>=0 and point.x<8 and point.y>=0 and point.y<8:
                 var r:=Rect2(board_rect.position+Vector2(point.x,point.y)*cell_size+Vector2(2,2),Vector2(cell_size-4,cell_size-4))
                 _box(r,Color(color.r,color.g,color.b,0.24),Color(color.r,color.g,color.b,0.92),5,2)
