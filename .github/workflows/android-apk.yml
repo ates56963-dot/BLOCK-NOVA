@@ -40,8 +40,11 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Android SDK kur
-        uses: android-actions/setup-android@v3
+      - name: Android SDK degiskenlerini ayarla
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=${ANDROID_HOME:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
 
       - name: Android SDK bileşenlerini yukle
         shell: bash
@@ -50,12 +53,19 @@ jobs:
           sdkmanager --install 'platform-tools' 'platforms;android-35' 'platforms;android-36' 'build-tools;35.0.0' 'build-tools;36.0.0'
           test -x "$ANDROID_HOME/platform-tools/adb"
 
+      - name: Python 3.12 kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Ozgun oyun gorsellerini ve seslerini olustur
         shell: bash
         run: |
-          python3 -m pip install --user --disable-pip-version-check numpy pillow
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg
+          python3 -m pip install --disable-pip-version-check numpy pillow
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
           mkdir -p assets/themes assets/audio/music assets/audio/sfx
           python3 tools/generate_icons.py
           python3 tools/generate_themes.py
